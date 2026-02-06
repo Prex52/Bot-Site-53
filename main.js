@@ -33,7 +33,7 @@ async function deployCommands() {
 }
 
 async function sendToRoblox(action) {
-  await fetch("https://serveu-ddna.onrender.com/discord", {
+  await fetch(process.env.LINK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
