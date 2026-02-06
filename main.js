@@ -29,6 +29,7 @@ async function deployCommands() {
     ),
     { body: commands }
   )
+  
   console.log("Commandes déployées")
 }
 
