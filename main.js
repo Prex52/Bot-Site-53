@@ -110,10 +110,7 @@ const commands = [
 
 async function deployCommands() {
   await rest.put(
-    Routes.applicationGuildCommands(
-      process.env.CLIENT_ID,
-      process.env.GUILD_ID
-    ),
+    Routes.applicationCommands(process.env.CLIENT_ID),
     { body: commands }
   )
   console.log("Commandes déployées avec succès")
