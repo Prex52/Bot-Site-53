@@ -8,9 +8,8 @@ const {
   SlashCommandBuilder
 } = require("discord.js")
 
-const { createCanvas, loadImage } = require("@napi-rs/canvas") // ✅ Remplace canvas (compatible Linux/Render)
+const { createCanvas, loadImage } = require("@napi-rs/canvas")
 const Config = require("./config.json")
-const fetch = require("node-fetch")
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN)
 
@@ -192,7 +191,7 @@ client.on("interactionCreate", async interaction => {
     await interaction.reply("✅ Envoyé avec succès")
     await sendToRoblox(`:warn ${pseudoId} ${raison}`)
   }
-
+  
   if (interaction.commandName === "unwarn") {
     await interaction.reply("✅ Envoyé avec succès")
     await sendToRoblox(`:unwarn ${pseudoId} ${raison}`)
