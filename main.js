@@ -8,7 +8,7 @@ const {
   SlashCommandBuilder
 } = require("discord.js")
 
-const { createCanvas, loadImage } = require("canvas")
+const { createCanvas, loadImage } = require("@napi-rs/canvas") // ✅ Remplace canvas (compatible Linux/Render)
 const Config = require("./config.json")
 const fetch = require("node-fetch")
 
@@ -21,6 +21,94 @@ const client = new Client({
   ]
 })
 
+const commands = [
+  new SlashCommandBuilder()
+    .setName("warn")
+    .setDescription("Permet de warn un joueur sur roblox")
+    .addStringOption(opt =>
+      opt.setName("pseudo_id")
+        .setDescription("Pseudo ou ID du joueur")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("raison")
+        .setDescription("Raison du warn")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("unwarn")
+    .setDescription("Permet de unwarn un joueur sur roblox")
+    .addStringOption(opt =>
+      opt.setName("pseudo_id")
+        .setDescription("Pseudo ou ID du joueur")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("raison")
+        .setDescription("Raison du unwarn")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("permban")
+    .setDescription("Permet de permban un joueur sur roblox")
+    .addStringOption(opt =>
+      opt.setName("pseudo_id")
+        .setDescription("Pseudo ou ID du joueur")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("raison")
+        .setDescription("Raison du ban")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("timeban")
+    .setDescription("Permet de timeban un joueur sur roblox")
+    .addStringOption(opt =>
+      opt.setName("pseudo_id")
+        .setDescription("Pseudo ou ID du joueur")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("raison")
+        .setDescription("Raison du ban")
+        .setRequired(true)
+    )
+    .addStringOption(opt =>
+      opt.setName("type")
+        .setDescription("Définit si le ban est en heure, jour, mois ou année")
+        .setRequired(true)
+        .addChoices(
+          { name: "Heure", value: "Heure" },
+          { name: "Jour", value: "Jour" },
+          { name: "Mois", value: "Mois" },
+          { name: "Année", value: "Année" }
+        )
+    )
+    .addIntegerOption(opt =>
+      opt.setName("temps")
+        .setDescription("Durée du ban")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("unban")
+    .setDescription("Permet de unban un joueur sur roblox")
+    .addStringOption(opt =>
+      opt.setName("pseudo_id")
+        .setDescription("Pseudo ou ID du joueur")
+        .setRequired(true)
+    )
+    .toJSON()
+]
+
 async function deployCommands() {
   await rest.put(
     Routes.applicationGuildCommands(
@@ -29,19 +117,22 @@ async function deployCommands() {
     ),
     { body: commands }
   )
-  
-  console.log("Commandes déployées")
+  console.log("Commandes déployées avec succès")
 }
 
 async function sendToRoblox(action) {
-  await fetch(process.env.LINK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action,
-      key: process.env.ROBLOX_SECRET
+  try {
+    await fetch(process.env.LINK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        key: process.env.ROBLOX_SECRET
+      })
     })
-  })
+  } catch (err) {
+    console.error("Erreur lors de l'envoi à Roblox :", err)
+  }
 }
 
 client.once("clientReady", async () => {
@@ -71,7 +162,7 @@ client.on("guildMemberAdd", async member => {
     ctx.drawImage(avatar, x, y, size, size)
     ctx.restore()
 
-    const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: "welcome.png" })
+    const attachment = new AttachmentBuilder(canvas.toBuffer("image/png"), { name: "welcome.png" })
 
     const embed = new EmbedBuilder()
       .setColor(0x6a0dad)
@@ -81,8 +172,7 @@ client.on("guildMemberAdd", async member => {
       .setTimestamp()
 
     const channel = await client.channels.fetch(Config.channels.logs)
-
-    channel.send({
+    await channel.send({
       embeds: [embed],
       files: [attachment]
     })
@@ -92,106 +182,37 @@ client.on("guildMemberAdd", async member => {
   }
 })
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName("warn")
-    .setDescription("Permet de warn un joueur sur roblox")
-    .addStringOption(opt => 
-    opt.setName("pseudo_id")
-      .setDescription("Pseudo ou ID du joueur")
-      .setRequired(true)
-    )
-    .addStringOption(opt =>
-      opt.setName("raison")
-      .setDescription("Raison du warn")
-      .setRequired(true)
-    )
-    .toJSON(),
- 
-  new SlashCommandBuilder()
-    .setName("unwarn")
-    .setDescription("Permet de unwarn un joueur sur roblox")
-    .addStringOption(opt => 
-      opt.setName("pseudo_id")
-      .setDescription("Pseudo ou ID du joueur")
-      .setRequired(true)
-    )
-    .addStringOption(opt =>
-      opt.setName("raison")
-      .setDescription("Raison du warn")
-      .setRequired(true)
-    )
-    .toJSON(),
-
-  new SlashCommandBuilder()
-    .setName("permban")
-    .setDescription("Permet de permban un joueur sur roblox")
-    .addStringOption(opt => 
-    opt.setName("pseudo_id")
-      .setDescription("Pseudo ou ID du joueur")
-      .setRequired(true)
-    )
-    .addStringOption(opt =>
-      opt.setName("raison")
-        .setDescription("Raison du ban")
-        .setRequired(true)
-    )
-    .toJSON(),
-
-  new SlashCommandBuilder()
-  .setName("timeban")
-  .setDescription("Permet de timeban un joueur sur roblox")
-  .addStringOption(opt => 
-    opt.setName("pseudo_id")
-      .setDescription("Pseudo ou ID du joueur")
-      .setRequired(true)
-    )
-
-    .addStringOption(opt =>
-      opt.setName("raison")
-        .setDescription("Raison du ban")
-        .setRequired(true)
-    )
-    .addStringOption(opt =>
-      opt.setName("type")
-      .setDescription("Defini si le ban est en jour, mois, heure")
-      .setRequired(true)
-      .addChoices(
-        { name: "Heure", value: "Heure" },
-        { name: "Jour", value: "Jour" },
-        { name: "Mois", value: "Mois" },
-        { name: "Année", value: "Année" }
-      )
-    )
-    .addIntegerOption(opt =>
-      opt.setName("temps")
-        .setDescription("Temps du ban")
-        .setRequired(true)
-    )
-  .toJSON(),
-  
-  new SlashCommandBuilder()
-  .setName("unban")
-  .setDescription("Permet de unban un joueur sur roblox")
-  .toJSON()
-]
-
-client.on("interactionCreate", interaction => {
+client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return
 
+  const pseudoId = interaction.options.getString("pseudo_id")
+  const raison = interaction.options.getString("raison")
+
   if (interaction.commandName === "warn") {
-    interaction.reply("Envoyer avec succé")
-    sendToRoblox(":warn " + interaction.options.getString("pseudo_id") + " " + interaction.options.getString("raison"))
+    await interaction.reply("✅ Envoyé avec succès")
+    await sendToRoblox(`:warn ${pseudoId} ${raison}`)
   }
 
   if (interaction.commandName === "unwarn") {
-    interaction.reply("Envoyer avec succé")
-    sendToRoblox(":unwarn " + interaction.options.getString("pseudo_id") + " " + interaction.options.getString("raison"))
+    await interaction.reply("✅ Envoyé avec succès")
+    await sendToRoblox(`:unwarn ${pseudoId} ${raison}`)
   }
 
   if (interaction.commandName === "permban") {
-    interaction.reply("Envoyer avec succé")
-    sendToRoblox(":permban " + interaction.options.getString("pseudo_id") + " " + interaction.options.getString("raison"))
+    await interaction.reply("✅ Envoyé avec succès")
+    await sendToRoblox(`:permban ${pseudoId} ${raison}`)
+  }
+
+  if (interaction.commandName === "timeban") {
+    const temps = interaction.options.getInteger("temps")
+    const type = interaction.options.getString("type")
+    await interaction.reply("✅ Envoyé avec succès")
+    await sendToRoblox(`:timeban ${pseudoId} ${temps} ${type} ${raison}`)
+  }
+
+  if (interaction.commandName === "unban") {
+    await interaction.reply("✅ Envoyé avec succès")
+    await sendToRoblox(`:unban ${pseudoId}`)
   }
 })
 
@@ -201,9 +222,6 @@ setInterval(() => {
   fetch("https://serveu-ddna.onrender.com/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "",
-      key: ""
-    })
-  })
+    body: JSON.stringify({ action: "", key: "" })
+  }).catch(err => console.error("Erreur ping Render :", err))
 }, 25000)
